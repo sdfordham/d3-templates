@@ -15,7 +15,7 @@ d3Scatterplot.update = (el, data, configuration) => {
   var svg = d3.select(el).select("svg")
 
   const x = d3.scaleTime()
-    .domain(d3.extent(data, d => new Date(d.datetime))).nice()
+    .domain(d3.extent(data, d => d.datetime)).nice()
     .range([margin.left, configuration.width - margin.right])
 
   const y = d3.scaleLinear()
@@ -83,9 +83,20 @@ d3Scatterplot.update = (el, data, configuration) => {
     .selectAll("path")
     .data(data)
     .join("path")
-    .attr("transform", d => `translate(${x(new Date(d.datetime))},${y(d.ibin)})`)
+    .attr("transform", d => `translate(${x(d.datetime)},${y(d.ibin)})`)
     .attr("fill", d => color(d.lot))
     .attr("d", d => shape(d.lot));
+
+  const tooltip = svg.append("g");
+
+  svg.on("touchmove mousemove", function(event) {
+    const mouse = d3.pointer(event, this),
+          nx = d3.bisectCenter(data.map(d => d.datetime), x.invert(mouse[0])),
+          filtered = data.filter(d => d.datetime == data[nx - 1].datetime),
+          ny = filtered[0].ibin;
+
+    console.log(nx, ny)
+  });
 };
 
 export default d3Scatterplot;
