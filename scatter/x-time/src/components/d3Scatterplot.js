@@ -95,11 +95,13 @@ d3Scatterplot.update = (el, data, configuration) => {
     const bisect = d3.bisector(d => d.datetime).left
     const mouse = d3.pointer(event, this),
           nx = bisect(data, x.invert(mouse[0]), 1);
-    const {datetime, ibin} = data[nx]
+    const {datetime, ibin, lot, wafer} = data[nx]
 
     tooltip
     .attr("transform", `translate(${x(datetime)},${y(ibin)})`)
-    .call(callout, `${ibin}
+    .call(callout, `Count: ${ibin}
+    Lot: ${lot}
+    Wafer: ${wafer}
     ${formatDate(datetime)}`);
   });
   
@@ -116,7 +118,8 @@ d3Scatterplot.update = (el, data, configuration) => {
       .data([null])
       .join("path")
         .attr("fill", "white")
-        .attr("stroke", "black");
+        .attr("stroke", "black")
+        .attr("opacity", 0.5);
   
     const text = g.selectAll("text")
       .data([null])
