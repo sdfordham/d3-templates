@@ -7,7 +7,7 @@ d3Scatterplot.create = (el, data, configuration) => {
 
 d3Scatterplot.update = (el, data, configuration) => {
   const margin = ({top: 25, right: 20, bottom: 35, left: 40})
-
+            
   d3.select(el)
     .append("svg")
     .attr("viewBox", [0, 0, configuration.width, configuration.height]);
@@ -87,16 +87,63 @@ d3Scatterplot.update = (el, data, configuration) => {
     .attr("fill", d => color(d.lot))
     .attr("d", d => shape(d.lot));
 
-  const tooltip = svg.append("g");
+  const tooltip = svg.append("g")
+
+  console.log(data)
 
   svg.on("touchmove mousemove", function(event) {
+    const bisect = d3.bisector(d => d.datetime).left
     const mouse = d3.pointer(event, this),
-          nx = d3.bisectCenter(data.map(d => d.datetime), x.invert(mouse[0])),
-          filtered = data.filter(d => d.datetime == data[nx - 1].datetime),
-          ny = filtered[0].ibin;
+          nx = bisect(data, x.invert(mouse[0]), 1);
+    const {datetime, ibin} = data[nx]
 
-    console.log(nx, ny)
+    tooltip
+    .attr("transform", `translate(${x(datetime)},${y(ibin)})`)
+    .call(callout, `${ibin}
+    ${formatDate(datetime)}`);
   });
+  
+  svg.on("touchend mouseleave", () => tooltip.call(callout, null));
+
+  const callout = (g, value) => {
+    if (!value) return g.style("display", "none");
+  
+    g.style("display", null)
+        .style("pointer-events", "none")
+        .style("font", "10px sans-serif");
+  
+    const path = g.selectAll("path")
+      .data([null])
+      .join("path")
+        .attr("fill", "white")
+        .attr("stroke", "black");
+  
+    const text = g.selectAll("text")
+      .data([null])
+      .join("text")
+      .call(text => text
+        .selectAll("tspan")
+        .data((value + "").split(/\n/))
+        .join("tspan")
+          .attr("x", 0)
+          .attr("y", (d, i) => `${i * 1.1}em`)
+          .style("font-weight", (_, i) => i ? null : "bold")
+          .text(d => d));
+  
+    const {x, y, width: w, height: h} = text.node().getBBox();
+  
+    text.attr("transform", `translate(${-w / 2},${15 - y})`);
+    path.attr("d", `M${-w / 2 - 10},5H-5l5,-5l5,5H${w / 2 + 10}v${h + 20}h-${w + 20}z`);
+  }
+
+  function formatDate(date) {
+    return date.toLocaleString("en", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      timeZone: "UTC"
+    });
+  }
 };
 
 export default d3Scatterplot;
