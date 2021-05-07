@@ -1,4 +1,5 @@
 var d3 = require("d3");
+var d3Voronoi = require("d3-voronoi");
 var d3Scatterplot = {};
 
 d3Scatterplot.create = (el, data, configuration) => {
@@ -67,16 +68,16 @@ d3Scatterplot.update = (el, data, configuration) => {
       .attr("x1", margin.left)
       .attr("x2", configuration.width - margin.right));
 
-  svg.append("g")
+  const gGrid = svg.append("g")
     .call(grid);
 
-  svg.append("g")
+  const gx = svg.append("g")
     .call(xAxis);
 
-  svg.append("g")
+  const gy = svg.append("g")
     .call(yAxis);
   
-  svg.append("g")
+  const gDot = svg.append("g")
     .attr("stroke-width", 1.5)
     .attr("font-family", "sans-serif")
     .attr("font-size", 10)
@@ -87,22 +88,29 @@ d3Scatterplot.update = (el, data, configuration) => {
     .attr("fill", d => color(d.lot))
     .attr("d", d => shape(d.lot));
 
-  const tooltip = svg.append("g")
+  const voronoi = d3Voronoi.voronoi(data)
+    .x(d => xAxis(d.datetime))
+    .y(d => yAxis(d.ibin));
 
-  console.log(data)
+  const tooltip = svg.append("g")
 
   svg.on("touchmove mousemove", function(event) {
     const bisect = d3.bisector(d => d.datetime).left
     const mouse = d3.pointer(event, this),
-          nx = bisect(data, x.invert(mouse[0]), 1);
-    const {datetime, ibin, lot, wafer} = data[nx]
+          // nearest = voronoi.find(mouse[0], mouse[1]),
+          nx = bisect(data, x.invert(mouse[0]), 1),
+          point = data[nx]
 
-    tooltip
-    .attr("transform", `translate(${x(datetime)},${y(ibin)})`)
-    .call(callout, `Count: ${ibin}
-    Lot: ${lot}
-    Wafer: ${wafer}
-    ${formatDate(datetime)}`);
+    if(point !== undefined) {
+      const {datetime, ibin, lot, wafer} = point
+
+      tooltip
+      .attr("transform", `translate(${x(datetime)},${y(ibin)})`)
+      .call(callout, `Count: ${ibin}
+      Lot: ${lot}
+      Wafer: ${wafer}
+      ${formatDate(datetime)}`);
+    }
   });
   
   svg.on("touchend mouseleave", () => tooltip.call(callout, null));
