@@ -1,5 +1,4 @@
 var d3 = require("d3");
-var d3Voronoi = require("d3-voronoi");
 var d3Scatterplot = {};
 
 d3Scatterplot.create = (el, data, configuration) => {
@@ -88,28 +87,24 @@ d3Scatterplot.update = (el, data, configuration) => {
     .attr("fill", d => color(d.lot))
     .attr("d", d => shape(d.lot));
 
-  const voronoi = d3Voronoi.voronoi(data)
-    .x(d => xAxis(d.datetime))
-    .y(d => yAxis(d.ibin));
+  const delaunay = d3.Delaunay
+    .from(data, d => x(d.datetime), d => y(d.ibin))
 
   const tooltip = svg.append("g")
 
   svg.on("touchmove mousemove", function(event) {
-    const bisect = d3.bisector(d => d.datetime).left
     const mouse = d3.pointer(event, this),
-          // nearest = voronoi.find(mouse[0], mouse[1]),
-          nx = bisect(data, x.invert(mouse[0]), 1),
-          point = data[nx]
+          nearest = delaunay.find(...mouse),
+          point = data[nearest]
 
     if(point !== undefined) {
       const {datetime, ibin, lot, wafer} = point
 
-      tooltip
-      .attr("transform", `translate(${x(datetime)},${y(ibin)})`)
-      .call(callout, `Count: ${ibin}
-      Lot: ${lot}
-      Wafer: ${wafer}
-      ${formatDate(datetime)}`);
+      tooltip.attr("transform", `translate(${x(datetime)},${y(ibin)})`)
+        .call(callout, `Count: ${ibin}
+        Lot: ${lot}
+        Wafer: ${wafer}
+        ${formatDate(datetime)}`);
     }
   });
   
