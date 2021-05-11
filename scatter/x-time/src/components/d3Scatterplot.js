@@ -1,11 +1,11 @@
 var d3 = require("d3");
-var d3Scatterplot = {};
+var d3Scatterpfoo = {};
 
-d3Scatterplot.create = (el, data, configuration) => {
-  d3Scatterplot.update(el, data, configuration)
+d3Scatterpfoo.create = (el, data, configuration) => {
+  d3Scatterpfoo.update(el, data, configuration)
 };
 
-d3Scatterplot.update = (el, data, configuration) => {
+d3Scatterpfoo.update = (el, data, configuration) => {
   const margin = ({top: 25, right: 20, bottom: 35, left: 40})
             
   d3.select(el)
@@ -19,11 +19,11 @@ d3Scatterplot.update = (el, data, configuration) => {
     .range([margin.left, configuration.width - margin.right])
 
   const y = d3.scaleLinear()
-    .domain(d3.extent(data, d => d.ibin)).nice()
+    .domain(d3.extent(data, d => d.val)).nice()
     .range([configuration.height - margin.bottom, margin.top])
 
-  const color = d3.scaleOrdinal(data.map(d => d.lot), d3.schemeCategory10)
-  const shape = d3.scaleOrdinal(data.map(d => d.lot), d3.symbols.map(s => d3.symbol().type(s)()))
+  const color = d3.scaleOrdinal(data.map(d => d.foo), d3.schemeCategory10)
+  const shape = d3.scaleOrdinal(data.map(d => d.foo), d3.symbols.map(s => d3.symbol().type(s)()))
 
   const xAxis = g => g
     .attr("transform", `translate(0,${configuration.height - margin.bottom})`)
@@ -45,7 +45,7 @@ d3Scatterplot.update = (el, data, configuration) => {
       .attr("y", 10)
       .attr("fill", "currentColor")
       .attr("text-anchor", "start")
-      .text(data.ibin))
+      .text(data.val))
 
   const grid = g => g
     .attr("stroke", "currentColor")
@@ -83,12 +83,12 @@ d3Scatterplot.update = (el, data, configuration) => {
     .selectAll("path")
     .data(data)
     .join("path")
-    .attr("transform", d => `translate(${x(d.datetime)},${y(d.ibin)})`)
-    .attr("fill", d => color(d.lot))
-    .attr("d", d => shape(d.lot));
+    .attr("transform", d => `translate(${x(d.datetime)},${y(d.val)})`)
+    .attr("fill", d => color(d.foo))
+    .attr("d", d => shape(d.foo));
 
   const delaunay = d3.Delaunay
-    .from(data, d => x(d.datetime), d => y(d.ibin))
+    .from(data, d => x(d.datetime), d => y(d.val))
 
   const tooltip = svg.append("g")
 
@@ -98,12 +98,12 @@ d3Scatterplot.update = (el, data, configuration) => {
           point = data[nearest]
 
     if(point !== undefined) {
-      const {datetime, ibin, lot, wafer} = point
+      const {datetime, val, foo, bar} = point
 
-      tooltip.attr("transform", `translate(${x(datetime)},${y(ibin)})`)
-        .call(callout, `Count: ${ibin}
-        Lot: ${lot}
-        Wafer: ${wafer}
+      tooltip.attr("transform", `translate(${x(datetime)},${y(val)})`)
+        .call(callout, `Val: ${val}
+        Foo: ${foo}
+        Bar: ${bar}
         ${formatDate(datetime)}`);
     }
   });
@@ -152,4 +152,4 @@ d3Scatterplot.update = (el, data, configuration) => {
   }
 };
 
-export default d3Scatterplot;
+export default d3Scatterpfoo;
